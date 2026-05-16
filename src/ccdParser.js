@@ -96,8 +96,16 @@ function indentLevel(line) {
   return Math.floor(spaces / 4);
 }
 
+function unescapeDslString(value = '') {
+  return String(value)
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\"/g, '"')
+    .replace(/\\\\/g, '\\');
+}
+
 function stripQuotes(value = '') {
-  return value.trim().replace(/^"/, '').replace(/"$/, '');
+  return unescapeDslString(value.trim().replace(/^"/, '').replace(/"$/, ''));
 }
 
 function parseNode(line) {
@@ -261,17 +269,17 @@ function parseNode(line) {
   // уведомить TARGET: "text"
   {
     const ntMatch = t.match(/^уведомить (.+?):\s*"(.*)"/);
-    if (ntMatch) return { type: 'notify', props: { target: ntMatch[1].trim(), text: ntMatch[2] }, root: false };
+    if (ntMatch) return { type: 'notify', props: { target: ntMatch[1].trim(), text: unescapeDslString(ntMatch[2]) }, root: false };
   }
   // рассылка всем: "text"
   {
     const bcAllMatch = t.match(/^рассылка всем:\s*"(.*)"/);
-    if (bcAllMatch) return { type: 'broadcast', props: { mode: 'all', text: bcAllMatch[1] }, root: false };
+    if (bcAllMatch) return { type: 'broadcast', props: { mode: 'all', text: unescapeDslString(bcAllMatch[1]) }, root: false };
   }
   // рассылка группе TAG: "text"
   {
     const bcGrpMatch = t.match(/^рассылка группе (\S+):\s*"(.*)"/);
-    if (bcGrpMatch) return { type: 'broadcast', props: { mode: 'group', tag: bcGrpMatch[1], text: bcGrpMatch[2] }, root: false };
+    if (bcGrpMatch) return { type: 'broadcast', props: { mode: 'group', tag: bcGrpMatch[1], text: unescapeDslString(bcGrpMatch[2]) }, root: false };
   }
 
   // ── Telegram расширения ─────────────────────────────────────────────────

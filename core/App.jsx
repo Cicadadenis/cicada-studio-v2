@@ -2942,12 +2942,17 @@ export default function App() {
       const m = raw.match(/^[\t ]*/);
       return ((m?.[0] || '').replace(/\t/g, '    ')).length;
     };
+    const unescapeDslString = (value = '') => String(value)
+      .replace(/\\n/g, '\n')
+      .replace(/\\r/g, '\r')
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\');
     const extractString = (line) => {
-      const m = line.match(/"([^"]*)"/); return m ? m[1] : '';
+      const m = line.match(/"([^"]*)"/); return m ? unescapeDslString(m[1]) : '';
     };
     const extractAllStrings = (line) => {
       const m = line.match(/"([^"]*)"/g);
-      return m ? m.map(s => s.replace(/"/g, '')) : [];
+      return m ? m.map(s => unescapeDslString(s.replace(/"/g, ''))) : [];
     };
 
     // ROOT-типы — всегда создают новый стек (indent=0)
@@ -3073,9 +3078,9 @@ export default function App() {
       if (t.startsWith('локация '))     { const m = t.match(/локация\s+([\d.]+)\s+([\d.]+)/); return { type: 'location', props: { lat: m?.[1] || '0', lon: m?.[2] || '0' } }; }
       if (t.startsWith('контакт '))     { const m = t.match(/контакт\s+"([^"]+)"\s+"([^"]+)"/); return { type: 'contact', props: { phone: m?.[1] || '', first_name: m?.[2] || '' } }; }
       if (t.startsWith('опрос '))       { const opts = extractAllStrings(t); return { type: 'poll', props: { question: opts[0] || '', options: opts.slice(1).join('\n'), type: 'regular' }, multiline: true }; }
-      if (t.startsWith('уведомить '))   { const m = t.match(/уведомить\s+(.+?):\s*"([^"]*)"/) || t.match(/уведомить\s+(\S+)\s+"([^"]*)"/); return m ? { type: 'notify', props: { target: m[1].trim(), text: m[2] } } : null; }
-      if (t.startsWith('рассылка всем:')) { const m = t.match(/рассылка всем:\s*"?([^"]*)"?/); return { type: 'broadcast', props: { mode: 'all', text: m?.[1] || '' } }; }
-      if (t.startsWith('рассылка группе ')) { const m = t.match(/рассылка группе\s+(\S+):\s*"?([^"]*)"?/); return m ? { type: 'broadcast', props: { mode: 'group', tag: m[1], text: m[2] } } : null; }
+      if (t.startsWith('уведомить '))   { const m = t.match(/уведомить\s+(.+?):\s*"([^"]*)"/) || t.match(/уведомить\s+(\S+)\s+"([^"]*)"/); return m ? { type: 'notify', props: { target: m[1].trim(), text: unescapeDslString(m[2]) } } : null; }
+      if (t.startsWith('рассылка всем:')) { const m = t.match(/рассылка всем:\s*"?([^"]*)"?/); return { type: 'broadcast', props: { mode: 'all', text: unescapeDslString(m?.[1] || '') } }; }
+      if (t.startsWith('рассылка группе ')) { const m = t.match(/рассылка группе\s+(\S+):\s*"?([^"]*)"?/); return m ? { type: 'broadcast', props: { mode: 'group', tag: m[1], text: unescapeDslString(m[2]) } } : null; }
       if (t.startsWith('проверить подписку ')) { const m = t.match(/проверить подписку\s+(@\S+)\s*→\s*(\S+)/); return m ? { type: 'check_sub', props: { channel: m[1], varname: m[2] } } : null; }
       if (t.startsWith('роль @'))       { const m = t.match(/роль\s+(@\S+)\s+(\S+)\s*→\s*(\S+)/); return m ? { type: 'member_role', props: { channel: m[1], user_id: m[2], varname: m[3] } } : null; }
       if (/^переслать\s+(?:текст|фото|документ|голосовое|аудио|стикер)\b/.test(t)) {
