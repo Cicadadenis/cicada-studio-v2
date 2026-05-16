@@ -77,7 +77,7 @@ function apiSurface(modulePath) {
   const py = `
 import ast, json, pathlib, sys
 p = pathlib.Path(sys.argv[1])
-tree = ast.parse(p.read_text(encoding="utf-8"))
+tree = ast.parse(p.read_text(encoding="utf-8-sig"))
 items = []
 for node in tree.body:
     if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
