@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.local
+secret.py
+uploads/
+server.out.log
+*.log
+.DS_Store
+cicada-studio-core.zip
+readmi.txt
+DEN.txt
+par.txt
+vendor/
+services/
+cicada-studio/.pypirc
+*.pypirc
